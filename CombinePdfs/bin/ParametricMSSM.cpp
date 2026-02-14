@@ -2,7 +2,8 @@
 // #include "boost/filesystem.hpp"
 // #include "boost/regex.hpp"
 // #include "boost/format.hpp"
-#include "boost/bind.hpp"
+// #include "boost/bind.hpp"
+#include "boost/lexical_cast.hpp"
 // #include "boost/assign/list_of.hpp"
 #include "CombineHarvester/CombineTools/interface/CombineHarvester.h"
 #include "CombineHarvester/CombineTools/interface/Observation.h"
@@ -20,7 +21,7 @@
 #include "RooHistPdf.h"
 #include "RooGenericPdf.h"
 
-using boost::bind;
+//using boost::bind;
 using std::string;
 using std::vector;
 using std::pair;
