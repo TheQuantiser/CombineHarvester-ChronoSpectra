@@ -3,6 +3,7 @@
   <class name="ch::BinByBinFactory" transient="true" />
   <class name="ch::CardWriter" transient="true" />
   <function name="ch::CheckEmptyBins" />
+  <function name="ch::CheckBinErrors" />
   <function name="ch::CheckEmptyShapes" />
   <function name="ch::CheckNormEff" />
   <function name="ch::CheckSizeOfShapeEffect" />
