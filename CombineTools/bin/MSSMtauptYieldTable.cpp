@@ -4,13 +4,15 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/algorithm/string.hpp"
 #include "boost/format.hpp"
-#include "boost/bind.hpp"
+//#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp" // replaces "boost/bind.hpp"
 #include "boost/program_options.hpp"
 #include "CombineHarvester/CombineTools/interface/CombineHarvester.h"
 #include "CombineHarvester/CombineTools/interface/Utilities.h"
 #include "CombineHarvester/CombineTools/interface/TFileIO.h"
 
 namespace po = boost::program_options;
+using namespace boost::placeholders;
 
 using namespace std;
 
