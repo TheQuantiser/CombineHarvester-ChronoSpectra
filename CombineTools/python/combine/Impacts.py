@@ -243,10 +243,7 @@ class Impacts(CombineToolBase):
         w = wsFile.Get(wsp)
         config = w.genobj(mc)
         pdfvars = config.GetPdf().getParameters(config.GetObservables())
-        it = pdfvars.createIterator()
-        var = it.Next()
-        while var:
+        for var in pdfvars:
             if var.GetName() not in pois and (not var.isConstant()) and var.InheritsFrom("RooRealVar"):
                 res.append(var.GetName())
-            var = it.Next()
         return res
