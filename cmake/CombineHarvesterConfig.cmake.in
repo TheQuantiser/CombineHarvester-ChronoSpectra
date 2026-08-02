@@ -1,0 +1,16 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+
+find_dependency(ROOT CONFIG
+  COMPONENTS Core RIO Hist Graf Gpad Tree Matrix MathCore MathMore
+             RooFitCore RooFit RooStats HistFactory)
+find_dependency(Boost CONFIG COMPONENTS filesystem program_options regex)
+find_dependency(Eigen3 CONFIG NO_MODULE)
+find_dependency(LibXml2)
+find_dependency(VDT)
+find_dependency(HiggsAnalysisCombinedLimit)
+
+include("${CMAKE_CURRENT_LIST_DIR}/CombineHarvesterTargets.cmake")
+check_required_components(CombineHarvester)

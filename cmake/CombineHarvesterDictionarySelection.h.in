@@ -1,0 +1,23 @@
+#ifndef COMBINEHARVESTER_DICTIONARY_SELECTION_H
+#define COMBINEHARVESTER_DICTIONARY_SELECTION_H
+
+#include "RootMetaSelection.h"
+
+namespace ROOT {
+namespace Meta {
+namespace Selection {
+namespace ch {
+
+// Keep the outer ch::CombineHarvester dictionary, but do not auto-select the
+// private std::map<std::string, AutoMCStatsSettings> member type. This is ROOT
+// dictionary metadata, not a replacement declaration of the C++ class.
+class CombineHarvester {
+  MemberAttributes<kNoAutoSelected> auto_stats_settings_;
+};
+
+}  // namespace ch
+}  // namespace Selection
+}  // namespace Meta
+}  // namespace ROOT
+
+#endif
