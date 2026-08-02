@@ -1,0 +1,4 @@
+<bin file="ChronoSpectraInternalTest.cpp" name="ChronoSpectraInternalTest"></bin>
+<use name="root"/>
+<use name="roofit"/>
+<use name="CombineHarvester/CombineTools"/>

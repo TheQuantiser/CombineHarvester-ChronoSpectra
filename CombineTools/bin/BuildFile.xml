@@ -23,6 +23,7 @@
 <bin file="SOBPlot.cpp" name="SOBPlot"></bin>
 <bin file="YieldTable.cpp" name="YieldTable"></bin>
 <bin file="hzz4l.cpp" name="hzz4l"></bin>
+<bin file="ChronoSpectra.cpp" name="ChronoSpectra"></bin>
 <use name="root"/>
 <use name="rootmath"/>
 <use name="roofit"/>

@@ -4,3 +4,4 @@
 !.gitignore
 !*.cpp
 !BuildFile.xml
+!ChronoSpectraInternal.h
