@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.20)
 
 project(CombineHarvester VERSION 4.0.0 LANGUAGES CXX)
 
+option(CH_INSTALL_PYTHON
+  "Install the existing CombineHarvester Python interface" ON)
+set(CH_PYTHON_EXECUTABLE "" CACHE FILEPATH
+  "Python interpreter whose purelib directory receives the interface")
+set(CH_PYTHON_INSTALL_DIR "" CACHE STRING
+  "Relative Python install directory; derived from the selected interpreter when empty")
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   message(FATAL_ERROR
     "An explicit CMAKE_INSTALL_PREFIX is required. Use a disposable staging "
@@ -91,6 +98,69 @@ set(HiggsAnalysisCombinedLimit_ROOT "${CH_CONDA_PREFIX}" CACHE PATH
 find_package(HiggsAnalysisCombinedLimit REQUIRED)
 find_package(VDT REQUIRED)
 
+if(CH_INSTALL_PYTHON)
+  if(CH_PYTHON_EXECUTABLE)
+    set(Python3_EXECUTABLE "${CH_PYTHON_EXECUTABLE}" CACHE FILEPATH
+      "Python interpreter selected for CombineHarvester" FORCE)
+  endif()
+  find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+  get_filename_component(_ch_python_real_executable
+    "${Python3_EXECUTABLE}" REALPATH)
+  string(FIND "${_ch_python_real_executable}" "${CH_CONDA_PREFIX}"
+    _ch_python_prefix_offset)
+  if(NOT _ch_python_prefix_offset EQUAL 0)
+    message(FATAL_ERROR
+      "Python3_EXECUTABLE='${Python3_EXECUTABLE}' is outside "
+      "CH_CONDA_PREFIX='${CH_CONDA_PREFIX}'. Pass "
+      "-DCH_PYTHON_EXECUTABLE=${CH_CONDA_PREFIX}/bin/python.")
+  endif()
+
+  if(NOT CH_PYTHON_INSTALL_DIR)
+    execute_process(
+      COMMAND "${Python3_EXECUTABLE}" -c
+        "import sysconfig; print(sysconfig.get_path('purelib'))"
+      RESULT_VARIABLE _ch_python_site_result
+      OUTPUT_VARIABLE _ch_python_site_dir
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_VARIABLE _ch_python_site_error)
+    if(NOT _ch_python_site_result EQUAL 0 OR NOT IS_ABSOLUTE
+       "${_ch_python_site_dir}")
+      message(FATAL_ERROR
+        "Could not determine Python purelib directory with "
+        "${Python3_EXECUTABLE}: ${_ch_python_site_error}")
+    endif()
+    file(RELATIVE_PATH CH_PYTHON_INSTALL_DIR "${CH_CONDA_PREFIX}"
+      "${_ch_python_site_dir}")
+  endif()
+  if(IS_ABSOLUTE "${CH_PYTHON_INSTALL_DIR}" OR
+     "${CH_PYTHON_INSTALL_DIR}" MATCHES "(^|/)\.\.(\/|$)")
+    message(FATAL_ERROR
+      "CH_PYTHON_INSTALL_DIR must be a relative path inside the selected "
+      "conda prefix, got '${CH_PYTHON_INSTALL_DIR}'.")
+  endif()
+  message(STATUS "Python executable: ${Python3_EXECUTABLE}")
+  message(STATUS "Python install directory: ${CH_PYTHON_INSTALL_DIR}")
+
+  set(_ch_generated_python_root
+    "${CMAKE_CURRENT_BINARY_DIR}/generated-python/CombineHarvester")
+  file(MAKE_DIRECTORY
+    "${_ch_generated_python_root}/CombineTools"
+    "${_ch_generated_python_root}/CombineTools/combine"
+    "${_ch_generated_python_root}/CombinePdfs")
+  foreach(_ch_python_init IN ITEMS
+      "${_ch_generated_python_root}/__init__.py"
+      "${_ch_generated_python_root}/CombineTools/__init__.py"
+      "${_ch_generated_python_root}/CombineTools/combine/__init__.py"
+      "${_ch_generated_python_root}/CombinePdfs/__init__.py")
+    file(WRITE "${_ch_python_init}"
+      "# Generated package marker for the installed CombineHarvester interface.\n")
+  endforeach()
+  configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CombineHarvesterPythonCh.py.in"
+    "${_ch_generated_python_root}/CombineTools/ch.py" @ONLY)
+endif()
+
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -128,6 +198,37 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/CombineTools/interface/"
   FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hpp")
+
+if(CH_INSTALL_PYTHON)
+  # The standalone ROOT dictionary retains these headers in its payload. Keep
+  # them in the install tree so cppyy can resolve free-function declarations
+  # without reaching back into the source or build directory.
+  install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/CombineTools/CombineHarvesterDictionarySelection.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CombineHarvester/CombineTools")
+  install(FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/CombineTools/src/classes.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/CombineTools/src/classes_def.xml"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CombineHarvester/CombineTools/src")
+
+  set(_ch_python_install_root
+    "${CH_PYTHON_INSTALL_DIR}/CombineHarvester")
+  foreach(_ch_python_component IN ITEMS CombineTools CombinePdfs)
+    install(DIRECTORY
+      "${CMAKE_CURRENT_SOURCE_DIR}/${_ch_python_component}/python/"
+      DESTINATION "${_ch_python_install_root}/${_ch_python_component}"
+      FILES_MATCHING
+        PATTERN "*.py"
+        PATTERN "__pycache__" EXCLUDE)
+  endforeach()
+  install(FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/CombineTools/python/ch.py"
+    DESTINATION "${_ch_python_install_root}/CombineTools"
+    RENAME "_ch_original.py")
+  install(DIRECTORY "${_ch_generated_python_root}/"
+    DESTINATION "${CH_PYTHON_INSTALL_DIR}/CombineHarvester"
+    FILES_MATCHING PATTERN "*.py")
+endif()
 
 include(CMakePackageConfigHelpers)
 set(_ch_package_dir "${CMAKE_INSTALL_LIBDIR}/cmake/CombineHarvester")

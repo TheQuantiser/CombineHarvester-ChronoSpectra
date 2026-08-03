@@ -1,0 +1,46 @@
+"""Installed cppyy entry point for the existing CombineHarvester wrapper.
+
+The source wrapper is kept unchanged. This install-time entry point supplies
+the public include roots needed by the standalone ROOT dictionary, then runs
+the original wrapper from the same installed package directory.
+"""
+
+from __future__ import absolute_import
+
+import os as _ch_os
+import runpy as _ch_runpy
+import sys as _ch_sys
+
+_ch_os.environ.setdefault("CLING_STANDARD_PCH", "none")
+import cppyy as _ch_cppyy
+
+for _ch_include_root in (
+    _ch_os.path.join(_ch_sys.prefix, "include"),
+    _ch_os.path.join(
+        _ch_sys.prefix, "include", "CombineHarvester", "CombineTools"
+    ),
+):
+    if _ch_os.path.isdir(_ch_include_root):
+        _ch_cppyy.add_include_path(_ch_include_root)
+
+_ch_cppyy.load_reflection_info("libCombineHarvesterCombineTools")
+for _ch_header in (
+    "CombineHarvester/CombineTools/interface/Utilities.h",
+    "CombineHarvester/CombineTools/interface/ValidationToolsNoJSON.h",
+    "CombineHarvester/CombineTools/interface/CopyTools.h",
+    "CombineHarvester/CombineTools/interface/ParseCombineWorkspace.h",
+):
+    _ch_cppyy.include(_ch_header)
+
+_ch_original = _ch_os.path.join(_ch_os.path.dirname(__file__), "_ch_original.py")
+_ch_namespace = _ch_runpy.run_path(_ch_original, run_name=__name__)
+for _ch_name, _ch_value in _ch_namespace.items():
+    if _ch_name not in {
+        "__name__",
+        "__file__",
+        "__cached__",
+        "__loader__",
+        "__package__",
+        "__spec__",
+    }:
+        globals()[_ch_name] = _ch_value
